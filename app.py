@@ -31,7 +31,7 @@ def GPT_response(text):
     try:
         # 使用 ChatCompletion.create 方法呼叫 OpenAI API
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # 確保使用正確的模型名稱
+            model="ft:gpt-3.5-turbo-0125:personal::AdIheb2L",  # 確保使用正確的模型名稱
             messages=[
                 {"role": "system", "content": "你是寵物專家，幫助飼主判斷寵物問題，回答應簡短明確，盡可能在100~200字內的回應。"},
                 {"role": "user", "content": text}
