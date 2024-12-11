@@ -42,6 +42,9 @@ def GPT_response(text):
     # 重組回應
     answer = response['choices'][0]['text'].replace('。','')
     return answer
+    except Exception as e:
+        print("Error in GPT_response:", e)
+        return "抱歉，目前無法提供回應，請稍後再試。"
 
 # 監聽所有來自 /callback 的 Post Request
 @app.route("/callback", methods=['POST'])
