@@ -4,6 +4,14 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 import openai
 import os
+from linebot.models import *
+
+#======python的函數庫==========
+import tempfile, os
+import datetime
+import openai
+import time
+import traceback
 
 app = Flask(__name__)
 
