@@ -1,73 +1,92 @@
-from flask import Flask, request, jsonify
-from linebot import LineBotApi, WebhookHandler
-from linebot.exceptions import InvalidSignatureError
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from flask import Flask, request, abort
+
+from linebot import (
+    LineBotApi, WebhookHandler
+)
+from linebot.exceptions import (
+    InvalidSignatureError
+)
+from linebot.models import *
+
+# ======python的函數庫==========
+import tempfile, os
+import datetime
 import openai
-import os
+import time
+import traceback
+# ======python的函數庫==========
 
 app = Flask(__name__)
-
+static_tmp_path = os.path.join(os.path.dirname(__file__), 'static', 'tmp')
 # Channel Access Token
 line_bot_api = LineBotApi(os.getenv('CHANNEL_ACCESS_TOKEN'))
 # Channel Secret
 handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))
-# OPENAI API Key 初始化設定
+# OPENAI API Key初始化設定
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
-# 接收來自 LINE 的 Webhook
-@app.route("/webhook", methods=["POST"])
-def webhook():
-    # 取得 X-Line-Signature 標頭
-    signature = request.headers.get("X-Line-Signature")
+# 定義 GPT 回應函數
+def GPT_response(text):
+    try:
+        # 使用 ChatCompletion.create 方法呼叫 OpenAI API
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # 使用正確的模型名稱
+            messages=[
+                {"role": "system", "content": "你是寵物專家，回答應簡短明確，控制在 100 字內。"},
+                {"role": "user", "content": text}
+            ],
+            temperature=0.5,
+            max_tokens=100  # 限制回應字數
+        )
+        print(response)
+        # 重組回應
+        answer = response['choices'][0]['message']['content'].strip()
+        return answer
+    except Exception as e:
+        print(f"Error in GPT_response: {e}")
+        return "抱歉，目前無法提供回應，請稍後再試。"
+
+# 監聽所有來自 /callback 的 Post Request
+@app.route("/callback", methods=['POST'])
+def callback():
+    # get X-Line-Signature header value
+    signature = request.headers['X-Line-Signature']
+    # get request body as text
     body = request.get_data(as_text=True)
-
-    # 打印日誌以檢查 Webhook 的請求內容
-    print("Received Webhook Body:", body)
-
+    app.logger.info("Request body: " + body)
+    # handle webhook body
     try:
         handler.handle(body, signature)
     except InvalidSignatureError:
-        print("Invalid Signature Error")
-        return jsonify({"status": "error", "message": "Invalid signature"}), 400
+        abort(400)
+    return 'OK'
 
-    return jsonify({"status": "success"}), 200
-
-
-# 處理文字訊息事件
+# 處理訊息
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    user_message = event.message.text  # 從 LINE 獲取使用者訊息
-    print("User Message:", user_message)  # 打印日誌檢查使用者輸入
-
+    msg = event.message.text  # 使用者輸入訊息
     try:
-        # 呼叫 OpenAI API
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "你是寵物專家，回答應簡短明確，控制在 100 字內。"},
-                {"role": "user", "content": user_message}
-            ],
-            max_tokens=100,  # 控制回應字數
-            temperature=0.7
-        )
-        # 取得回應內容
-        ai_reply = response.choices[0].message.get("content", "").strip()
-        print("AI Reply:", ai_reply)  # 打印日誌檢查 AI 回應
-
-        # 回覆使用者訊息
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text=ai_reply)
-        )
+        GPT_answer = GPT_response(msg)  # 呼叫 GPT_response 函數
+        print(GPT_answer)  # 打印回應
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(GPT_answer))  # 回傳訊息
     except Exception as e:
-        print(f"Error while calling OpenAI API: {e}")
-        # 回應錯誤訊息
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text="抱歉，我無法回應您的問題，請稍後再試。")
-        )
+        print(traceback.format_exc())
+        line_bot_api.reply_message(event.reply_token, TextSendMessage('抱歉，目前無法處理您的請求，請稍後再試。'))
 
+@handler.add(PostbackEvent)
+def handle_postback(event):
+    print(event.postback.data)
 
+@handler.add(MemberJoinedEvent)
+def welcome(event):
+    uid = event.joined.members[0].user_id
+    gid = event.source.group_id
+    profile = line_bot_api.get_group_member_profile(gid, uid)
+    name = profile.display_name
+    message = TextSendMessage(text=f'{name}歡迎加入')
+    line_bot_api.reply_message(event.reply_token, message)
+
+import os
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
