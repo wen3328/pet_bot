@@ -38,10 +38,11 @@ def GPT_response(text):
             temperature=0.5,
             max_tokens=200  # 限制回應字數
         )
-        print(response)
-    # 重組回應
-    answer = response['choices'][0]['text'].replace('。','')
-    return answer
+        print("OpenAI API 回應成功:", response)
+
+        # 正確提取內容
+        answer = response['choices'][0]['message']['content'].strip()
+        return answer
     except Exception as e:
         print("Error in GPT_response:", e)
         return "抱歉，目前無法提供回應，請稍後再試。"
