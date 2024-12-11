@@ -1,0 +1,53 @@
+from flask import Flask, request, jsonify
+import openai
+import requests
+
+app = Flask(__name__)
+
+# 接收來自 LINE 的 Webhook
+@app.route("/webhook", methods=["POST"])
+def webhook():
+    body = request.json
+    events = body.get("events", [])
+    if not events:
+        return "No events", 400
+
+    # 處理每個事件
+    for event in events:
+        if event.get("type") == "message" and event["message"]["type"] == "text":
+            user_message = event["message"]["text"]
+            reply_token = event["replyToken"]
+
+            # 呼叫 OpenAI API
+            response = openai.chat.completions.create(
+                model="ft:gpt-3.5-turbo-0125:personal::AdAzPCxA",  # 替換為您的微調模型 ID
+                messages=[
+                    {"role": "system", "content": "你是寵物專家，回答應簡短明確，控制在 50 字內。"},
+                    {"role": "user", "content": user_message}
+                ],
+                max_tokens=50
+            )
+            ai_reply = response.choices[0].message.content
+
+            # 發送回應到 LINE
+            send_line_reply(reply_token, ai_reply)
+
+    return "OK", 200
+
+
+# 發送訊息到 LINE
+def send_line_reply(reply_token, message):
+    url = "https://api.line.me/v2/bot/message/reply"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {LINE_CHANNEL_ACCESS_TOKEN}"
+    }
+    payload = {
+        "replyToken": reply_token,
+        "messages": [{"type": "text", "text": message}]
+    }
+    requests.post(url, headers=headers, json=payload)
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
