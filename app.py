@@ -30,7 +30,7 @@ def GPT_response(text):
     try:
         # 使用 ChatCompletion.create 方法呼叫 OpenAI API
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # 使用正確的模型名稱
+            model="gpt-3.5-turbo",  # 確保使用正確的模型名稱
             messages=[
                 {"role": "system", "content": "你是寵物專家，回答應簡短明確，控制在 100 字內。"},
                 {"role": "user", "content": text}
@@ -38,8 +38,7 @@ def GPT_response(text):
             temperature=0.5,
             max_tokens=100  # 限制回應字數
         )
-        print(response)
-        # 重組回應
+        # 從 API 回應中提取訊息內容
         answer = response['choices'][0]['message']['content'].strip()
         return answer
     except Exception as e:
