@@ -32,18 +32,17 @@ def GPT_response(text):
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",  # 確保使用正確的模型名稱
             messages=[
-                {"role": "system", "content": "你是寵物專家，幫助飼主判斷寵物問題，回答應簡短明確，盡可能在100~200自已內的回應。"},
+                {"role": "system", "content": "你是寵物專家，幫助飼主判斷寵物問題，回答應簡短明確，盡可能在100~200字內的回應。"},
                 {"role": "user", "content": text}
             ],
             temperature=0.5,
             max_tokens=100  # 限制回應字數
         )
         # 從 API 回應中提取訊息內容
-        answer = response['choices'][0]['message']['content'].strip()
-        return answer
-    except Exception as e:
-        print(f"Error in GPT_response: {e}")
-        return "抱歉，目前無法提供回應，請稍後再試。"
+        if 'choices' in response and len(response['choices']) > 0:
+    answer = response['choices'][0]['message']['content'].strip()
+        else:
+    answer = "OpenAI API 回應無效。"
 
 # 監聽所有來自 /callback 的 Post Request
 @app.route("/callback", methods=['POST'])
