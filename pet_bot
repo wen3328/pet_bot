@@ -3,14 +3,12 @@ import openai
 import requests
 
 app = Flask(__name__)
-static_tmp_path = os.path.join(os.path.dirname(__file__), 'static', 'tmp')
-# Channel Access Token
-line_bot_api = LineBotApi(os.getenv('CHANNEL_ACCESS_TOKEN'))
-# Channel Secret
-handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))
-# OPENAI API Key初始化設定
-openai.api_key = os.getenv('OPENAI_API_KEY')
 
+# 設定 OpenAI API 金鑰
+openai.api_key = "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"
+
+# LINE Messaging API 的 Channel Access Token
+LINE_CHANNEL_ACCESS_TOKEN = "98Z5Qpxio592jhUUxiJ5TkzOpDGYfjmDtSo6pClaiX2Sbk9DBt3rPfbhuX7Ajt432Jna82MbMYfLnUyJWycmQheldpQviAS59CTIbRCCf4KHg8hCOhf7X+p2N5hcTL5Vre/E6QhICRvkHkWiwUdipgdB04t89/1O/w1cDnyilFU="
 
 # 接收來自 LINE 的 Webhook
 @app.route("/webhook", methods=["POST"])
