@@ -36,13 +36,12 @@ def GPT_response(text):
                 {"role": "user", "content": text}
             ],
             temperature=0.5,
-            max_tokens=100  # 限制回應字數
+            max_tokens=200  # 限制回應字數
         )
-        # 從 API 回應中提取訊息內容
-        if 'choices' in response and len(response['choices']) > 0:
-    answer = response['choices'][0]['message']['content'].strip()
-        else:
-    answer = "OpenAI API 回應無效。"
+        print(response)
+    # 重組回應
+    answer = response['choices'][0]['text'].replace('。','')
+    return answer
 
 # 監聽所有來自 /callback 的 Post Request
 @app.route("/callback", methods=['POST'])
