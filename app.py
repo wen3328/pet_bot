@@ -67,15 +67,9 @@ def callback():
 def handle_message(event):
     msg = event.message.text  # 使用者輸入訊息
     try:
-        # 判斷是否是圖選單的選項
-        if user_message == "我想知道關於寵物的健康護理問題~":  # 圖選單選項 1
-            gpt_answer = GPT_response("寵物的健康護理的相關資訊")
-            line_bot_api.reply_message(reply_token, TextSendMessage(GPT_answer))
-        else:
-            # 一般文字訊息，呼叫 GPT
-            GPT_answer = GPT_response(msg)  # 呼叫 GPT_response 函數
-            print(GPT_answer)  # 打印回應
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(GPT_answer))  # 回傳訊息
+        GPT_answer = GPT_response(msg)  # 呼叫 GPT_response 函數
+        print(GPT_answer)  # 打印回應
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(GPT_answer))  # 回傳訊息
     except Exception as e:
         print(traceback.format_exc())
         line_bot_api.reply_message(event.reply_token, TextSendMessage('抱歉，目前無法處理您的請求，請稍後再試。'))
