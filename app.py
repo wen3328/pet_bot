@@ -68,7 +68,7 @@ def handle_message(event):
     msg = event.message.text  # 使用者輸入訊息
     try:
         # 判斷是否是圖選單的選項
-        if user_message == "我想知道關於寵物的健康護理問題~"  # 圖選單選項 1
+        if user_message == "我想知道關於寵物的健康護理問題~":  # 圖選單選項 1
             gpt_answer = GPT_response("寵物的健康護理的相關資訊")
             line_bot_api.reply_message(reply_token, TextSendMessage(GPT_answer))
         else:
